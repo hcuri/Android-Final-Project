@@ -5,7 +5,7 @@ import java.util.Vector;
 public class List {
 	public String name;
 	public String color;
-	public Vector<ToDo> toDos;
+	public Vector<Task> tasks;
 
 	public List(){
 		super();

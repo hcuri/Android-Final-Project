@@ -1,25 +1,96 @@
 package com.curi;
 
+import java.util.ArrayList;
+
 import android.app.Activity;
 import android.app.Fragment;
+import android.graphics.Paint;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemClickListener;
+import android.widget.CheckedTextView;
+import android.widget.EditText;
+import android.widget.ListView;
+import com.parse.FindCallback;
+import com.parse.Parse;
+import com.parse.ParseAnalytics;
+import com.parse.ParseException;
+import com.parse.ParseObject;
+import com.parse.ParseQuery;
+import com.parse.ParseQuery.CachePolicy;
 
-public class MainActivity extends Activity {
+public class MainActivity extends Activity implements OnItemClickListener{
+
+	private EditText mTaskInput;
+	private ListView mListView;
+	private TaskAdapter mAdapter;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
 
-//		if (savedInstanceState == null) {
-//			getFragmentManager().beginTransaction()
-//					.add(R.id.container, new PlaceholderFragment()).commit();
-//		}
+		Parse.initialize(this, "eWwRUTH1UIfOuAjxlyE4fkrDii5AuKDWGoLvZq0w", "tfreVuLEyblkzLQN6LXL5mLtYeIrsh9yWfiVr5ql");
+		ParseAnalytics.trackAppOpened(getIntent());
+		ParseObject.registerSubclass(Task.class);
+
+		mTaskInput = (EditText) findViewById(R.id.task_input);
+		mListView = (ListView) findViewById(R.id.task_list);
+
+		mAdapter = new TaskAdapter(this, new ArrayList<Task>());
+		mListView.setAdapter(mAdapter);
+		mListView.setOnItemClickListener(this);
+
+		
+		updateData();
+	}
+
+	public void createTask(View v) {
+		if (mTaskInput.getText().length() > 0){
+			Task t = new Task();
+			t.setDescription(mTaskInput.getText().toString());
+			t.setCompleted(false);
+			t.saveEventually();
+			mTaskInput.setText("");
+			mAdapter.insert(t, 0);
+		}
+	}
+
+	public void updateData(){
+		ParseQuery<Task> query = ParseQuery.getQuery(Task.class);
+		query.setCachePolicy(CachePolicy.CACHE_THEN_NETWORK);
+		query.findInBackground(new FindCallback<Task>() { 
+
+			@Override
+			public void done(java.util.List<Task> tasks, ParseException e) {
+				if(tasks != null){
+					mAdapter.clear();
+					mAdapter.addAll(tasks);
+				}
+			}
+		});
+	}
+	
+	public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+	  Task task = mAdapter.getItem(position);
+	  CheckedTextView taskDescription = (CheckedTextView) view.findViewById(R.id.task_description);
+
+	  task.setCompleted(!task.isCompleted());
+
+	  if(task.isCompleted()){
+	      taskDescription.setPaintFlags(taskDescription.getPaintFlags() | Paint.STRIKE_THRU_TEXT_FLAG);
+	      taskDescription.setChecked(true);
+	  }else{
+	      taskDescription.setPaintFlags(taskDescription.getPaintFlags() & (~Paint.STRIKE_THRU_TEXT_FLAG));
+	      taskDescription.setChecked(false);
+	  }
+
+	  task.saveEventually();
 	}
 
 	@Override
