@@ -46,7 +46,27 @@ public class MainActivity extends Activity implements OnItemClickListener{
 		mListView.setAdapter(mAdapter);
 		mListView.setOnItemClickListener(this);
 
-		
+		SwipeDismissListViewTouchListener touchListener =
+				new SwipeDismissListViewTouchListener(
+						mListView,
+						new SwipeDismissListViewTouchListener.OnDismissCallback() {
+							public void onDismiss(ListView listView, int[] reverseSortedPositions) {
+								for (int position : reverseSortedPositions) {
+									try {
+										mAdapter.getItem(position).delete();
+									} catch (ParseException e) {
+										// TODO Auto-generated catch block
+										e.printStackTrace();
+									}
+									mAdapter.remove(mAdapter.getItem(position));
+								}
+								mAdapter.notifyDataSetChanged();
+							}
+						});
+		mListView.setOnTouchListener(touchListener);
+		mListView.setOnScrollListener(touchListener.makeScrollListener());
+
+
 		updateData();
 	}
 
@@ -64,6 +84,7 @@ public class MainActivity extends Activity implements OnItemClickListener{
 	public void updateData(){
 		ParseQuery<Task> query = ParseQuery.getQuery(Task.class);
 		query.setCachePolicy(CachePolicy.CACHE_THEN_NETWORK);
+		query.orderByDescending("createdAt");
 		query.findInBackground(new FindCallback<Task>() { 
 
 			@Override
@@ -75,22 +96,22 @@ public class MainActivity extends Activity implements OnItemClickListener{
 			}
 		});
 	}
-	
+
 	public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-	  Task task = mAdapter.getItem(position);
-	  CheckedTextView taskDescription = (CheckedTextView) view.findViewById(R.id.task_description);
+		Task task = mAdapter.getItem(position);
+		CheckedTextView taskDescription = (CheckedTextView) view.findViewById(R.id.task_description);
 
-	  task.setCompleted(!task.isCompleted());
+		task.setCompleted(!task.isCompleted());
 
-	  if(task.isCompleted()){
-	      taskDescription.setPaintFlags(taskDescription.getPaintFlags() | Paint.STRIKE_THRU_TEXT_FLAG);
-	      taskDescription.setChecked(true);
-	  }else{
-	      taskDescription.setPaintFlags(taskDescription.getPaintFlags() & (~Paint.STRIKE_THRU_TEXT_FLAG));
-	      taskDescription.setChecked(false);
-	  }
+		if(task.isCompleted()){
+			taskDescription.setPaintFlags(taskDescription.getPaintFlags() | Paint.STRIKE_THRU_TEXT_FLAG);
+			taskDescription.setChecked(true);
+		}else{
+			taskDescription.setPaintFlags(taskDescription.getPaintFlags() & (~Paint.STRIKE_THRU_TEXT_FLAG));
+			taskDescription.setChecked(false);
+		}
 
-	  task.saveEventually();
+		task.saveEventually();
 	}
 
 	@Override

@@ -3,14 +3,13 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:paddingLeft="@dimen/activity_horizontal_margin"
-    android:paddingRight="@dimen/activity_horizontal_margin"
     tools:context=".TodoActivity" >
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal" >
+        android:orientation="horizontal"
+        android:padding="@dimen/activity_horizontal_margin" >
 
         <EditText
             android:id="@+id/task_input"
@@ -18,8 +17,9 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:ems="10"
-            android:inputType="text"
-            android:hint="Enter a Task">
+            android:hint="@string/task_hint"
+            android:inputType="text" >
+
             <requestFocus />
         </EditText>
 
@@ -28,7 +28,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:onClick="createTask"
-            android:text="Submit" />
+            android:text="@string/add" />
     </LinearLayout>
 
     <ListView
