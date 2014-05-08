@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:android="http://schemas.android.com/apk/res/android">
 
     <string name="app_name">To Do List</string>
     <string name="hello_world">Hello world!</string>
@@ -18,6 +18,8 @@
     <string name="register">Register</string>
     <string name="haveAccount">Already have an account?</string>
     <string name="logout">Log Out</string>
-    <string name="submit5">Submit</string>
-
+    <string name="add_due_date">Add Due Date</string>
+    <string name="remove_due_date">Remove Due Date</string>
+    <string name="delete">Delete</string>
+    
 </resources>
