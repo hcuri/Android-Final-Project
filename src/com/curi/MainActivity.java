@@ -1,21 +1,29 @@
 package com.curi;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
 
 import android.app.Activity;
+import android.app.DatePickerDialog;
+import android.app.Dialog;
+import android.app.DialogFragment;
 import android.content.Intent;
 import android.graphics.Paint;
 import android.os.Bundle;
+import android.view.ContextMenu;
+import android.view.ContextMenu.ContextMenuInfo;
 import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
+import android.widget.AdapterView.AdapterContextMenuInfo;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.CheckedTextView;
+import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.ListView;
-
 import com.parse.FindCallback;
 import com.parse.Parse;
 import com.parse.ParseACL;
@@ -23,14 +31,15 @@ import com.parse.ParseAnalytics;
 import com.parse.ParseException;
 import com.parse.ParseObject;
 import com.parse.ParseQuery;
-import com.parse.ParseUser;
 import com.parse.ParseQuery.CachePolicy;
+import com.parse.ParseUser;
 
 public class MainActivity extends Activity implements OnItemClickListener{
 
 	private EditText mTaskInput;
 	private ListView mListView;
-	private TaskAdapter mAdapter;
+	private static TaskAdapter mAdapter;
+	public static int current;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -76,6 +85,8 @@ public class MainActivity extends Activity implements OnItemClickListener{
 						});
 		mListView.setOnTouchListener(touchListener);
 		mListView.setOnScrollListener(touchListener.makeScrollListener());
+
+		registerForContextMenu(mListView);
 	}
 
 	public void createTask(View v) {
@@ -85,6 +96,7 @@ public class MainActivity extends Activity implements OnItemClickListener{
 			t.setUser(ParseUser.getCurrentUser());
 			t.setDescription(mTaskInput.getText().toString());
 			t.setCompleted(false);
+			t.setDueYear(0);
 			t.saveEventually();
 			mAdapter.insert(t, 0);
 			mTaskInput.setText("");
@@ -95,6 +107,7 @@ public class MainActivity extends Activity implements OnItemClickListener{
 		ParseQuery<Task> query = ParseQuery.getQuery(Task.class);
 		query.whereEqualTo("user", ParseUser.getCurrentUser());
 		query.setCachePolicy(CachePolicy.CACHE_THEN_NETWORK);
+		query.orderByDescending("createdAt");
 		query.findInBackground(new FindCallback<Task>() {
 			@Override
 			public void done(List<Task> tasks, ParseException error) {
@@ -144,4 +157,73 @@ public class MainActivity extends Activity implements OnItemClickListener{
 		} 
 		return false; 
 	}
+
+	@Override
+	public void onCreateContextMenu(ContextMenu menu, View v,
+			ContextMenuInfo menuInfo) {
+		super.onCreateContextMenu(menu, v, menuInfo);
+		MenuInflater inflater = getMenuInflater();
+		inflater.inflate(R.menu.context_menu, menu);
+	}
+
+	@Override
+	public boolean onContextItemSelected(MenuItem item) {
+		AdapterContextMenuInfo info = (AdapterContextMenuInfo) item.getMenuInfo();
+		Task t = mAdapter.getItem(info.position);
+		current = info.position;
+		switch (item.getItemId()) {
+		case R.id.due_date:
+			DialogFragment newFragment = new DatePickerFragment();
+		    newFragment.show(getFragmentManager(), "datePicker");
+			return true;
+			
+		case R.id.remove_due_date:
+			t.setDueYear(0);
+			t.saveEventually();
+			mAdapter.notifyDataSetChanged();
+			return true;
+			
+		case R.id.delete:
+			try {
+				t.delete();
+			} catch (ParseException e) {
+				e.printStackTrace();
+			}
+			mAdapter.remove(t);
+			mAdapter.notifyDataSetChanged();
+			return true;
+		default:
+			mAdapter.notifyDataSetChanged();
+			return super.onContextItemSelected(item);
+		}
+	}
+
+	public static class DatePickerFragment extends DialogFragment
+	implements DatePickerDialog.OnDateSetListener {
+
+		@Override
+		public Dialog onCreateDialog(Bundle savedInstanceState) {
+			// Use the current date as the default date in the picker
+			final Calendar c = Calendar.getInstance();
+			int year = c.get(Calendar.YEAR);
+			int month = c.get(Calendar.MONTH);
+			int day = c.get(Calendar.DAY_OF_MONTH);
+
+			// Create a new instance of DatePickerDialog and return it
+			return new DatePickerDialog(getActivity(), this, year, month, day);
+		}
+
+		public void onDateSet(DatePicker view, int selectedYear, int selectedMonth, int selectedDay) {
+			// Do something with the date chosen by the user
+			Task t = mAdapter.getItem(current);
+			t.setDueYear(selectedYear);
+		    t.setDueMonth(selectedMonth);
+		    t.setDueDay(selectedDay);
+		    t.saveEventually();
+		    mAdapter.notifyDataSetChanged();
+			
+		}
+	}
 }
+
+

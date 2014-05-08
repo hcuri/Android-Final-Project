@@ -9,6 +9,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.CheckedTextView;
+import android.widget.TextView;
 
 
 public class TaskAdapter extends ArrayAdapter<Task> {
@@ -30,8 +31,17 @@ public class TaskAdapter extends ArrayAdapter<Task> {
 	      Task task = mTasks.get(position);
 
 	      CheckedTextView descriptionView = (CheckedTextView) convertView.findViewById(R.id.task_description);
+	      TextView	dateView = (TextView) convertView.findViewById(R.id.task_date);
 
 	      descriptionView.setText(task.getDescription());
+	      dateView.setVisibility(View.GONE);
+	      
+	      if(task.getDueYear()>2000){
+	    	  dateView.setVisibility(View.VISIBLE);
+	    	  dateView.setText(new StringBuilder().append(task.getDueMonth() + 1)
+	   			   .append("-").append(task.getDueDay()).append("-").append(task.getDueYear())
+	   			   .append(" "));
+	      }
 
 	      if(task.isCompleted()){
 	          descriptionView.setPaintFlags(descriptionView.getPaintFlags() | Paint.STRIKE_THRU_TEXT_FLAG);

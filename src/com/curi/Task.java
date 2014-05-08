@@ -29,4 +29,28 @@ public class Task extends ParseObject{
 	public void setUser(ParseUser currentUser) {
 		put("user", currentUser);
 	}
+	
+	public void setDueYear(int year){
+		put("dueYear", year);
+	}
+	
+	public int getDueYear(){
+		return getInt("dueYear");
+	}
+	
+	public void setDueMonth(int month){
+		put("dueMonth", month);
+	}
+	
+	public int getDueMonth(){
+		return getInt("dueMonth");
+	}
+	
+	public void setDueDay(int day){
+		put("dueDay", day);
+	}
+	
+	public int getDueDay(){
+		return getInt("dueDay");
+	}
 }
