@@ -75,7 +75,6 @@ public class MainActivity extends Activity implements OnItemClickListener{
 									try {
 										mAdapter.getItem(position).delete();
 									} catch (ParseException e) {
-										// TODO Auto-generated catch block
 										e.printStackTrace();
 									}
 									mAdapter.remove(mAdapter.getItem(position));
