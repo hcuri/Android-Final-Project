@@ -1,27 +1,29 @@
 package com.curi;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import android.app.Activity;
-import android.app.Fragment;
+import android.content.Intent;
 import android.graphics.Paint;
 import android.os.Bundle;
-import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.CheckedTextView;
 import android.widget.EditText;
 import android.widget.ListView;
+
 import com.parse.FindCallback;
 import com.parse.Parse;
+import com.parse.ParseACL;
 import com.parse.ParseAnalytics;
 import com.parse.ParseException;
 import com.parse.ParseObject;
 import com.parse.ParseQuery;
+import com.parse.ParseUser;
 import com.parse.ParseQuery.CachePolicy;
 
 public class MainActivity extends Activity implements OnItemClickListener{
@@ -39,12 +41,21 @@ public class MainActivity extends Activity implements OnItemClickListener{
 		ParseAnalytics.trackAppOpened(getIntent());
 		ParseObject.registerSubclass(Task.class);
 
-		mTaskInput = (EditText) findViewById(R.id.task_input);
-		mListView = (ListView) findViewById(R.id.task_list);
+		ParseUser currentUser = ParseUser.getCurrentUser();
+		if(currentUser == null){
+			Intent intent = new Intent(this, LoginActivity.class);
+			startActivity(intent);
+			finish();
+		}
 
 		mAdapter = new TaskAdapter(this, new ArrayList<Task>());
+
+		mTaskInput = (EditText) findViewById(R.id.task_input);
+		mListView = (ListView) findViewById(R.id.task_list);
 		mListView.setAdapter(mAdapter);
 		mListView.setOnItemClickListener(this);
+
+		updateData();
 
 		SwipeDismissListViewTouchListener touchListener =
 				new SwipeDismissListViewTouchListener(
@@ -65,33 +76,33 @@ public class MainActivity extends Activity implements OnItemClickListener{
 						});
 		mListView.setOnTouchListener(touchListener);
 		mListView.setOnScrollListener(touchListener.makeScrollListener());
-
-
-		updateData();
 	}
 
 	public void createTask(View v) {
 		if (mTaskInput.getText().length() > 0){
 			Task t = new Task();
+			t.setACL(new ParseACL(ParseUser.getCurrentUser()));
+			t.setUser(ParseUser.getCurrentUser());
 			t.setDescription(mTaskInput.getText().toString());
 			t.setCompleted(false);
 			t.saveEventually();
-			mTaskInput.setText("");
 			mAdapter.insert(t, 0);
+			mTaskInput.setText("");
 		}
 	}
 
 	public void updateData(){
 		ParseQuery<Task> query = ParseQuery.getQuery(Task.class);
+		query.whereEqualTo("user", ParseUser.getCurrentUser());
 		query.setCachePolicy(CachePolicy.CACHE_THEN_NETWORK);
-		query.orderByDescending("createdAt");
-		query.findInBackground(new FindCallback<Task>() { 
-
+		query.findInBackground(new FindCallback<Task>() {
 			@Override
-			public void done(java.util.List<Task> tasks, ParseException e) {
+			public void done(List<Task> tasks, ParseException error) {
 				if(tasks != null){
 					mAdapter.clear();
-					mAdapter.addAll(tasks);
+					for (int i = 0; i < tasks.size(); i++) {
+						mAdapter.add(tasks.get(i));
+					}
 				}
 			}
 		});
@@ -122,33 +133,15 @@ public class MainActivity extends Activity implements OnItemClickListener{
 		return true;
 	}
 
-	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
-		// Handle action bar item clicks here. The action bar will
-		// automatically handle clicks on the Home/Up button, so long
-		// as you specify a parent activity in AndroidManifest.xml.
-		int id = item.getItemId();
-		if (id == R.id.action_settings) {
-			return true;
-		}
-		return super.onOptionsItemSelected(item);
+		switch (item.getItemId()) {
+		case R.id.action_logout: 
+			ParseUser.logOut();
+			Intent intent = new Intent(this, LoginActivity.class);
+			startActivity(intent);
+			finish();
+			return true; 
+		} 
+		return false; 
 	}
-
-	/**
-	 * A placeholder fragment containing a simple view.
-	 */
-	public static class PlaceholderFragment extends Fragment {
-
-		public PlaceholderFragment() {
-		}
-
-		@Override
-		public View onCreateView(LayoutInflater inflater, ViewGroup container,
-				Bundle savedInstanceState) {
-			View rootView = inflater.inflate(R.layout.fragment_main, container,
-					false);
-			return rootView;
-		}
-	}
-
 }

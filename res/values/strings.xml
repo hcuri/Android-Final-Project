@@ -8,5 +8,16 @@
     <string name="new_list">Add New List</string>
     <string name="task_hint">Enter a Task</string>
     <string name="add">Add</string>
+    <string name="title_activity_login">Login</string>
+    <string name="title_activity_register">Register</string>
+    <string name="password">Password</string>
+    <string name="username">Username</string>
+    <string name="login">Log In</string>
+    <string name="submit">Submit</string>
+    <string name="noAccount">Don\'t have an account?</string>
+    <string name="register">Register</string>
+    <string name="haveAccount">Already have an account?</string>
+    <string name="logout">Log Out</string>
+    <string name="submit5">Submit</string>
 
 </resources>
